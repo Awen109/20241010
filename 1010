@@ -1,0 +1,105 @@
+using System;
+using System.Data;
+using System.Text;
+
+class Program
+{
+    static void Main()
+    {
+        // 示例DataTable
+        DataTable dt = new DataTable();
+        dt.Columns.Add("Column1");
+        dt.Columns.Add("Column2");
+        dt.Columns.Add("Column3");
+        dt.Columns.Add("Column4");
+
+        // 添加数据行
+        dt.Rows.Add("A", "X", "1", "2");
+        dt.Rows.Add("A", "X", "3", "4");
+        dt.Rows.Add("A", "Y", "5", "6");
+        dt.Rows.Add("B", "Y", "7", "8");
+        dt.Rows.Add("B", "Z", "9", "10");
+
+        // 转换DataTable为HTML
+        string html = ConvertDataTableToHTML(dt);
+        Console.WriteLine(html);
+    }
+
+    static string ConvertDataTableToHTML(DataTable dt)
+    {
+        StringBuilder html = new StringBuilder();
+        html.Append("<table border='1'>");
+
+        // 添加表头
+        html.Append("<tr>");
+        foreach (DataColumn column in dt.Columns)
+        {
+            html.Append("<th>" + column.ColumnName + "</th>");
+        }
+        html.Append("</tr>");
+
+        int rowspan1 = 1;
+        int rowspan2 = 1;
+
+        for (int i = 0; i < dt.Rows.Count; i++)
+        {
+            if (i == 0 || dt.Rows[i]["Column1"].ToString() != dt.Rows[i - 1]["Column1"].ToString())
+            {
+                rowspan1 = 1;
+                for (int j = i + 1; j < dt.Rows.Count; j++)
+                {
+                    if (dt.Rows[j]["Column1"].ToString() == dt.Rows[i]["Column1"].ToString())
+                        rowspan1++;
+                    else
+                        break;
+                }
+
+                html.Append("<tr>");
+                html.Append("<td rowspan='" + rowspan1 + "'>" + dt.Rows[i]["Column1"] + "</td>");
+
+                if (i == 0 || dt.Rows[i]["Column2"].ToString() != dt.Rows[i - 1]["Column2"].ToString())
+                {
+                    rowspan2 = 1;
+                    for (int j = i + 1; j < i + rowspan1; j++)
+                    {
+                        if (dt.Rows[j]["Column2"].ToString() == dt.Rows[i]["Column2"].ToString())
+                            rowspan2++;
+                        else
+                            break;
+                    }
+
+                    html.Append("<td rowspan='" + rowspan2 + "'>" + dt.Rows[i]["Column2"] + "</td>");
+                }
+                else
+                {
+                    rowspan2 = 0;
+                }
+            }
+            else if (dt.Rows[i]["Column2"].ToString() != dt.Rows[i - 1]["Column2"].ToString())
+            {
+                rowspan2 = 1;
+                for (int j = i + 1; j < i + rowspan1; j++)
+                {
+                    if (dt.Rows[j]["Column2"].ToString() == dt.Rows[i]["Column2"].ToString())
+                        rowspan2++;
+                    else
+                        break;
+                }
+
+                html.Append("<td rowspan='" + rowspan2 + "'>" + dt.Rows[i]["Column2"] + "</td>");
+            }
+            else
+            {
+                rowspan2 = 0;
+            }
+
+            // 添加剩余列
+            html.Append("<td>" + dt.Rows[i]["Column3"] + "</td>");
+            html.Append("<td>" + dt.Rows[i]["Column4"] + "</td>");
+            html.Append("</tr>");
+        }
+
+        html.Append("</table>");
+        return html.ToString();
+    }
+}
