@@ -1,0 +1,118 @@
+using System;
+using System.Data;
+using System.Text;
+
+class Program
+{
+    static void Main()
+    {
+        // 创建示例DataTable
+        DataTable dt = new DataTable();
+        dt.Columns.Add("Column1");
+        dt.Columns.Add("Column2");
+        dt.Columns.Add("Column3");
+        dt.Columns.Add("Column4");
+
+        // 添加数据行
+        dt.Rows.Add("A", "X", "1", "2");
+        dt.Rows.Add("A", "X", "3", "4");
+        dt.Rows.Add("A", "Y", "5", "6");
+        dt.Rows.Add("B", "Y", "7", "8");
+        dt.Rows.Add("B", "Z", "9", "10");
+
+        // 转换DataTable为HTML
+        string html = ConvertDataTableToHTML(dt);
+        Console.WriteLine(html);
+    }
+
+    static string ConvertDataTableToHTML(DataTable dt)
+    {
+        StringBuilder html = new StringBuilder();
+        html.Append("<table border='1'>");
+
+        // 添加表头
+        html.Append("<tr>");
+        foreach (DataColumn column in dt.Columns)
+        {
+            html.Append("<th>" + column.ColumnName + "</th>");
+        }
+        html.Append("</tr>");
+
+        // 用来记录上一个单元格的值及rowspan
+        string previousValue1 = null;
+        string previousValue2 = null;
+        int rowspan1 = 1;
+        int rowspan2 = 1;
+
+        for (int i = 0; i < dt.Rows.Count; i++)
+        {
+            // 如果第一列的值与上一个不同，则需要新建行
+            if (i == 0 || dt.Rows[i]["Column1"].ToString() != previousValue1)
+            {
+                html.Append("<tr>");
+                // 处理第一列
+                rowspan1 = CountRowSpan(dt, i, 0); // 计算第一列的rowspan
+                html.Append("<td rowspan='" + rowspan1 + "'>" + dt.Rows[i]["Column1"] + "</td>");
+                previousValue1 = dt.Rows[i]["Column1"].ToString();
+
+                // 处理第二列
+                rowspan2 = CountRowSpan(dt, i, 1); // 计算第二列的rowspan
+                html.Append("<td rowspan='" + rowspan2 + "'>" + dt.Rows[i]["Column2"] + "</td>");
+                previousValue2 = dt.Rows[i]["Column2"].ToString();
+
+                // 添加剩余列
+                html.Append("<td>" + dt.Rows[i]["Column3"] + "</td>");
+                html.Append("<td>" + dt.Rows[i]["Column4"] + "</td>");
+                html.Append("</tr>");
+            }
+            else
+            {
+                // 如果第一列相同但第二列不同，处理第二列
+                if (dt.Rows[i]["Column2"].ToString() != previousValue2)
+                {
+                    html.Append("<tr>");
+                    rowspan2 = CountRowSpan(dt, i, 1); // 计算第二列的rowspan
+                    html.Append("<td rowspan='" + rowspan2 + "'>" + dt.Rows[i]["Column2"] + "</td>");
+                    previousValue2 = dt.Rows[i]["Column2"].ToString();
+
+                    // 添加剩余列
+                    html.Append("<td>" + dt.Rows[i]["Column3"] + "</td>");
+                    html.Append("<td>" + dt.Rows[i]["Column4"] + "</td>");
+                    html.Append("</tr>");
+                }
+                else
+                {
+                    // 如果第一列和第二列都相同，则只添加第三列和第四列
+                    html.Append("<tr>");
+                    html.Append("<td>" + dt.Rows[i]["Column3"] + "</td>");
+                    html.Append("<td>" + dt.Rows[i]["Column4"] + "</td>");
+                    html.Append("</tr>");
+                }
+            }
+        }
+
+        html.Append("</table>");
+        return html.ToString();
+    }
+
+    // 计算某列从当前行开始的rowspan
+    static int CountRowSpan(DataTable dt, int rowIndex, int columnIndex)
+    {
+        string value = dt.Rows[rowIndex][columnIndex].ToString();
+        int rowspan = 1;
+
+        for (int i = rowIndex + 1; i < dt.Rows.Count; i++)
+        {
+            if (dt.Rows[i][columnIndex].ToString() == value)
+            {
+                rowspan++;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return rowspan;
+    }
+}
